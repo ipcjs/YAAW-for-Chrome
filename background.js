@@ -89,6 +89,7 @@ function parse_url(url) {
 }
 
 function aria2Send(link, url, output) {
+    console.log('aria2Send', arguments)
     chrome.cookies.getAll({ "url": link }, function(cookies) {
         var format_cookies = [];
         for (var i in cookies) {
@@ -197,12 +198,12 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
 });
 
-chrome.downloads.onDeterminingFilename.addListener(function(downloadItem) {
+function callback(downloadItem) {
     var integration = localStorage.getItem("integration");
     if (integration == "true" && isCapture(downloadItem)) {
         console.log(chrome.runtime.lastError);
-        setTimeout(function() {
-            chrome.downloads.getFileIcon(downloadItem.id, function(iconUrl) {
+        setTimeout(function () {
+            chrome.downloads.getFileIcon(downloadItem.id, function (iconUrl) {
                 if (chrome.runtime.lastError) {
                     console.log(chrome.runtime.lastError.message);
                 }
@@ -214,11 +215,19 @@ chrome.downloads.onDeterminingFilename.addListener(function(downloadItem) {
                     "id": downloadItem.id
                 });
             });
-            chrome.downloads.cancel(downloadItem.id, function() {});
+            chrome.downloads.cancel(downloadItem.id, function () { });
             chrome.downloads.erase({ id: downloadItem.id });
         }, 500);
     }
-});
+}
+
+// onDeterminingFilename事件监听存在让其他扩展的download设置filename无效的问题
+// 详见: https://bugs.chromium.org/p/chromium/issues/detail?id=579563
+if ((localStorage.getItem('auto-rename') || "true") === "true") {
+    chrome.downloads.onDeterminingFilename.addListener(callback);
+} else {
+    chrome.downloads.onCreated.addListener(callback)
+}
 
 
 /*

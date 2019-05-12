@@ -19,6 +19,8 @@ $(function(){
                 }
                 var fileSize=localStorage.getItem("fileSize")||500;
                 $("#fileSize").val(fileSize);
+                var autoRename = localStorage.getItem("auto-rename") || "true";
+                $("#auto-rename").prop('checked', autoRename === "true")
                 var rpc_list=JSON.parse(localStorage.getItem("rpc_list")||'[{"name":"ARIA2 RPC","url":"http://localhost:6800/jsonrpc"}]');
                 for(var i in rpc_list){
                     var addBtn=0==i?'<button class="btn" id="add-rpc">Add RPC</button>':'';
@@ -78,6 +80,13 @@ $(function(){
                 }
                 var fileSize=$("#fileSize").val();
                 localStorage.setItem("fileSize", fileSize);
+                var autoRename = $('#auto-rename').prop('checked')
+                if(((localStorage.getItem('auto-rename') || "true") === "true") !== autoRename){
+                    localStorage.setItem("auto-rename", autoRename)
+                    setTimeout(function(){
+                        chrome.runtime.reload()
+                    }, 100)
+                }
                 var black_site =$("#black-site").val().split("\n");
                 localStorage.setItem("black_site", JSON.stringify(black_site));
                 var white_site =$("#white-site").val().split("\n");
